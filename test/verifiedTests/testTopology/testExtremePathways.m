@@ -12,7 +12,8 @@
 
 if isunix
     [status, result] = system('which lrs');
-    if isempty(strfind(result, 'not found'))
+    if ~isempty(strfind(result, '/lrs'))
+
         % save the current path
         currentDir = pwd;
 
@@ -28,6 +29,7 @@ if isunix
               0,  1,  1,  0,  0,  0, 0,  0, -1;
               0,  0, -1,  1, -1,  0, 0,  0,  0];
 
+        clear model;
         model.S = S;
 
         % calculates the matrix of extreme pathways, P
@@ -50,7 +52,8 @@ if isunix
         model.description = 'PapinPrincePalsson';
         [nMet, nRxn] = size(model.S);
         model.b = zeros(nMet, 1);
-        model.directionality = zeros(nRxn, 1);
+        model.lb = -1000*ones(nRxn, 1);
+        model.ub = 1000*ones(nRxn, 1);
         positivity = 0;
         inequality = 1;
 

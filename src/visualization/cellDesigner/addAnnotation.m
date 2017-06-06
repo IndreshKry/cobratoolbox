@@ -1,34 +1,34 @@
 function [var] = addAnnotation(fname,fname_out,infix,model,infix_type)
-
-% Retrieve omics data from a COBRA model structure and add them to a
-% CellDesginer XML file; The omics data will be shown as texts in
-% CellDesigner or ReconMap online.
+% Retrieves omics data from a COBRA model structure and add them to a
+% `CellDesginer` XML file; The omics data will be shown as texts in
+% `CellDesigner` or `ReconMap` online.
 %
+% USAGE:
 %
-%INPUTS
+%    [var] = addAnnotation(fname, fname_out, infix, model, infix_type)
 %
-% fname      An XML file to be modified to include annotations
-% fanme_out  the name of the output XML file
-% infix      The metabolite/reaction IDs to be used to retrieve omics data
-%            in the COBRA model structure.
-% model      a COBRA model structure that contains the annotations which
-%            can be retrieved by using the infix as the index value.
-
-%OPTIONAL INPUT
+% INPUTS:
+%    fname:         an XML file to be modified to include annotations
+%    fanme_out:     the name of the output XML file
+%    infix:         The metabolite/reaction IDs to be used to retrieve omics data
+%                   in the COBRA model structure.
+%    model:         a COBRA model structure that contains the annotations which
+%                   can be retrieved by using the infix as the index value.
 %
-% infix_type      'name' or 'id'; 1) 'name'indicates that 'infix' contains
-%                 a list of reaction names, which are normally used in a
-%                 COBRA model structure. 2)'id' indicates that 'infix'
-%                 contains a list of IDs used in CellDesigner such as
-%                 're32'.
+% OPTIONAL INPUT:
 %
-%OPTIONAL OUTPUT
+%    infix_type:    'name' or 'id'
 %
-% var        the content of the moidfied XML file with annotations
+%                       1. 'name' indicates that 'infix' contains
+%                          a list of reaction names, which are normally used in a
+%                          COBRA model structure.
+%                       2. 'id' indicates that 'infix'
+%                          contains a list of IDs used in `CellDesigner` such as 're32'.
 %
+% OPTIONAL OUTPUT:
+%    var:           the content of the moidfied XML file with annotations
 %
-% Longfei Mao Jan/2015
-
+% .. Author: - Longfei Mao January 2015
 
 if nargin<6;
     list=fieldnames(model);  % Extract all fields of the model structure.
@@ -497,223 +497,3 @@ end
 
 end
 
-
-%
-%
-% function [finalItems,finalContent]=contructItems(index,model)
-%
-% % rxnItems    an array of combined Keywords and Contents
-%
-% % rxnContent   an array of Contents
-%
-%
-% infix=index;
-%
-% expr='\s\w*';
-% infix=regexp(infix{1},expr,'match');
-%
-% if isempty(infix)||size(infix,2)>1
-%     infix=index
-% end
-%
-% infix_trimed=strtrim(infix);
-% %infix_trimed=cellstr(infix_trimed);
-% %%
-% try
-% num=find(strcmp(model.rxns(:,1),infix_trimed)); %% find the reaction number in the model.
-% catch
-%     disp(infix_trimed);
-% end
-%
-% para='rxn';
-% if isempty(num)
-%     num=find(strcmp(model.mets(:,1),infix_trimed));
-%     if ~isempty(num)
-%         para='met';
-%     else
-%         msg=strcat(infix, ' cannot be found in both reaction and metabolite name lists');
-%         para='not_found';
-%         warndlg(msg,'Warning!');
-%     end
-% elseif ~isempty(find(strcmp(model.mets(:,1),infix_trimed), 1))        %%%%% Error! the reaction and metabolite use the same name.
-%     msg=strcat(infix, ' is used as a reaction name as well as a metabolite name');
-%     warndlg(msg,'Warning!');
-% end
-%
-% %% the annotation template for metabolites
-%
-% if strcmp(para,'met')
-%     metKeywords={
-%         'Symbol: ';
-%         'Abbreviation: ';
-%         'ChargedFormula: ';
-%         'Charge: ';
-%         'Synonyms: ';
-%         'metInchiString: ';
-%         'Description: '
-%         };
-%     %%% assign a initial value of ' ' to the list of the variables.
-%
-%     Symbol=' ';
-%     Abbreviation=' ';
-%     ChargedFormula=' ';
-%     Charge=' ';
-%     Synonyms=' ';
-%     metInchiString=' ';
-%     Description=' ';
-%
-%
-%     if ~isempty(num)
-%
-%         if ~isfield(model,'Symbol');
-%             Symbol=' ';
-%         else
-%             Symbol=model.Symbol(num);
-%         end
-%
-%         if ~isfield(model,'Synonyms');
-%             Synonyms=' ';
-%         end
-%         if ~isfield(model,'metInchiString')
-%             metInchiString=' ';
-%         else
-%             metInchiString=model.metInchiString(num);
-%
-%         end
-%
-%         if ~isfield(model,'Description')
-%             Description=' ';
-%         else
-%             Description=model.Description(num);
-%         end
-%
-%
-%
-%         Abbreviation=model.mets(num);
-%         ChargedFormula=model.metFormulas(num);
-%         Charge=model.metCharge(num);
-%         Synonyms=model.metNames(num);
-%
-%
-%     end
-%
-%     if isnumeric(Charge)
-%         Charge=num2str(Charge);
-%     end
-%
-%
-%
-%     %%%%%%%%%%%%%%%%%%%%%%%%
-%
-%     metContent=[
-%         Symbol(1);
-%         Abbreviation(1);
-%         ChargedFormula(1);
-%         Charge(1);
-%         Synonyms(1);
-%         metInchiString(1);
-%         Description(1);
-%         ];
-%
-%     %%%%%
-%
-%     for f=1:length(metContent);
-%
-%         finalItems(f)=strcat(metKeywords(f),metContent(f));
-%     end
-%
-%
-%     finalContent=metContent;
-% elseif strcmp(para,'rxn')
-%
-%
-%
-%     %% check if annotation field for reactions of the COBRA model are avaliable and use a initial value of ' ' as the default annotation.
-%
-%     Abbreviation=model.rxns(num);
-%     Description=model.rxnNames(num);
-%
-%     if ~isfield(model,'MCS');
-%         MCS=' ';
-%     end
-%
-%
-%     Ref=' ';
-%
-%     ECNumber=model.rxnECNumbers(num);
-%     KeggID=model.rxnKeggID(num);
-%
-%     LastModified=' ';
-%
-%     LB=model.lb(num);
-%     UB=model.ub(num);
-%
-%     if isnumeric(LB)|isnumeric(UB)
-%         LB=num2str(LB);
-%         UB=num2str(UB);
-%     end
-%     if ~isfield(model,'grRules');
-%         grRules=' ';
-%     end
-%
-%     if exist('CS')~=1;
-%         CS=1;
-%     end
-%
-%     if isnumeric(CS)
-%         CS=num2str(CS);
-%     end
-%
-%     GPR=model.grRules(num);
-%
-%     Subsystem=model.subSystems(num);
-%
-%     %%
-%
-%     % MCS-CS: Mechanical Confidence Score CS: Confidence Score - LB: Lower
-%     % Bound - UB: Upper Bound MCS: Mechanical Confidence Score - GPR: Gene
-%     % Protein Reaction)
-%
-%     %% the annotation template for metabolites
-%
-%
-%
-%     rxnKeywords={
-%         'Abbreviation: ';
-%         'Description: ';
-%         'MCS: ';
-%         'Ref: ';
-%         'ECNumber: ';
-%         'KeggID: ';
-%         'LastModified: ';
-%         'LB: ';
-%         'UB: ';
-%         'CS: ';
-%         'GPR: ';
-%         'Subsystem: '};
-%
-%     finalContent=[
-%         Abbreviation(1);
-%         Description(1);
-%         MCS(1);
-%         Ref(1);
-%         ECNumber(1);
-%         KeggID(1);
-%         LastModified(1);
-%         LB;
-%         UB;
-%         CS;
-%         GPR;
-%         Subsystem];
-%
-%     %%
-%
-%     for d=1:length(finalContent);
-%         finalItems(d)=strcat(rxnKeywords(d),finalContent(d));
-%     end
-% elseif strcmp(para,'not_found');
-%     finalItems(1)=strcat(infix,' not found in both met and rxn lists');
-%     finalContent(1)=strcat(infix,' not found in both met and rxn lists');
-% end
-%
-% end

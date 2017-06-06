@@ -1,4 +1,4 @@
-function prepIntegrationQuant(model,metData,exchanges,samples,test_max,test_min,path,tol,variation)
+function prepIntegrationQuant(model,metData,exchanges,samples,test_max,test_min,outputPath,tol,variation)
 % This function generates individual uptake and secretion profiles from a
 % data matrix (fluxes) with samples as columns and metabolites as rows.
 % Negative values are interpreted as uptake and positive values are
@@ -10,11 +10,11 @@ function prepIntegrationQuant(model,metData,exchanges,samples,test_max,test_min,
 % secretion is eliminated from the sample profile whereas uptake will still
 % be mapped.
 % The individual uptake and secretion profile for each sample is saved to
-% the location specified in path using the unique sample name.
+% the location specified in outputPath using the unique sample name.
 %
 % USAGE:
 %
-%    prepIntegrationQuant(model, metData, exchanges, samples, test_max, test_min, path, tol, variation)
+%    prepIntegrationQuant(model, metData, exchanges, samples, test_max, test_min, outputPath, tol, variation)
 %
 % INPUTS:
 %       model:                   Prepared global model (e.g., `model_for_CORE` from `prepModel`)
@@ -23,7 +23,7 @@ function prepIntegrationQuant(model,metData,exchanges,samples,test_max,test_min,
 %       samples:                 Vector of sample names (no dublicate names)
 %       test_max:                Minimal uptake/secretion set while testing if model can perform uptake and secretion of a metabolite (e.g., 500)
 %       test_min:                Maximal uptake/secretion set while testing if model can perform uptake and secretion of a metabolite (e.g., 0.00001)
-%       path:                    Path where output files should be saved (e.g. 'Y:\Studies\Data_integration\CORE\usingRecon1\models\')
+%       outputPath:              Path where output files should be saved (e.g. 'Y:\Studies\Data_integration\CORE\usingRecon1\models\')
 %       tol:                     All fluxes below this value are considered to be zero, (e.g., 1e-6)
 %       variation:               Lower and upper bound are established with this value as error range in % (e.g.,20)
 %
@@ -48,63 +48,54 @@ function prepIntegrationQuant(model,metData,exchanges,samples,test_max,test_min,
 %       - Maike K. Aurich 18/02/15
 
 
- for i=1:length(exchanges)
- %% check which mets cannot be produced or consumed
+for i=1:length(exchanges)
+    %% check which mets cannot be produced or consumed
 
-
- %% secretion
-     model1= changeRxnBounds(model,exchanges(i,1), test_max, 'u');
-     model1= changeRxnBounds(model1,exchanges(i,1), test_min, 'l');
-     FBA = optimizeCbModel(model1);
-
+    %% secretion
+    model1= changeRxnBounds(model,exchanges(i,1), test_max, 'u');
+    model1= changeRxnBounds(model1,exchanges(i,1), test_min, 'l');
+    FBA = optimizeCbModel(model1);
 
     FBA_all_secreted(i,1)=FBA.f;
     FBA_all_secreted(i,2)=FBA.stat;
 
+    secretion = exchanges(i);
+    FBA_all_secreted_names(i,1)={secretion};
+end
 
+Secretion_not_possible = {};
+l=1;
+for i=1:length(FBA_all_secreted)
+    G = FBA_all_secreted_names(find(FBA_all_secreted(i,1)==0));
+    if ~isempty(G)
+        Secretion_not_possible(l,1)= FBA_all_secreted_names{i};
+        l=l+1;
+    end
+end
 
-secretion = exchanges(i);
-FBA_all_secreted_names(i,1)={secretion};
- end
+%% uptake
+for i=1:length(exchanges)
+    model1= changeRxnBounds(model,exchanges(i), -1*test_max, 'l');
+    model1= changeRxnBounds(model1,exchanges(i), -1*test_min, 'u');
 
- l=1;
- for i=1:length(FBA_all_secreted)
-     G = FBA_all_secreted_names(find(FBA_all_secreted(i,1)==0));
-     if ~isempty(G)
-      Secretion_not_possible(l,1)= FBA_all_secreted_names{i};
-      l=l+1;
-     else
-         Secretion_not_possible = {};
-     end
- end
+    FBA = optimizeCbModel(model1);
 
+    FBA_all_uptake(i,1)=FBA.f;
+    FBA_all_uptake(i,2)=FBA.stat;
 
- %% uptake
- for i=1:length(exchanges)
+    secretion = exchanges(i); % here it does not matter how its called
+    FBA_all_uptake_names(i,1)={secretion};
+end
 
-     model1= changeRxnBounds(model,exchanges(i), -1*test_max, 'l');
-     model1= changeRxnBounds(model1,exchanges(i), -1*test_min, 'u');
-
-     FBA = optimizeCbModel(model1);
-
-
-
-   FBA_all_uptake(i,1)=FBA.f;
-     FBA_all_uptake(i,2)=FBA.stat;
-
- secretion = exchanges(i); % here it does not matter how its called
-     FBA_all_uptake_names(i,1)={secretion};
-
- end
- l=1;
- for i=1:length(FBA_all_uptake)
-     G = FBA_all_uptake_names(find(FBA_all_uptake(i,1)==0));
-     if ~isempty(G)
-      Uptake_not_possible(l,1)= FBA_all_uptake_names{i};
-      l=l+1;
-     end
- end
-
+Uptake_not_possible = {};
+l=1;
+for i=1:length(FBA_all_uptake)
+    G = FBA_all_uptake_names(find(FBA_all_uptake(i,1)==0));
+    if ~isempty(G)
+        Uptake_not_possible(l,1)= FBA_all_uptake_names{i};
+        l=l+1;
+    end
+end
 
 %% make vectors of uptke/secretion, whereby exchanges that are not possible
 %% with the current generic model (i.e. Uptake_not_possible and Secretion_not_possible) are excluded.
@@ -139,7 +130,6 @@ for i = 1:length(samples)
         if abs(cell_line_data(j))<= tol
             No_upt_secr(n,1)= exchanges(j,1);
             n=n+1;
-
         end
     end
 
@@ -153,9 +143,9 @@ for i = 1:length(samples)
         uptake_value = [];
     end
 
-     % save individual uptake and secretion profile for each sample (with sample name) to path
-     savefile=char(cell_line);
-     save([path filesep savefile], 'FBA_all_secreted', 'FBA_all_secreted_names' , 'FBA_all_uptake' , 'FBA_all_uptake_names', 'cell_line' , 'cell_line_data' , 'secr_value' , 'secretion' , 'uptake_value' , 'uptake', 'No_upt_secr');
+     % save individual uptake and secretion profile for each sample (with sample name) to outputPath
+     savefile = char(cell_line);
+     save([outputPath filesep savefile], 'FBA_all_secreted', 'FBA_all_secreted_names' , 'FBA_all_uptake' , 'FBA_all_uptake_names', 'cell_line' , 'cell_line_data' , 'secr_value' , 'secretion' , 'uptake_value' , 'uptake', 'No_upt_secr');
      clear secretion uptake secr_value uptake_value List_upt_secr No_upt_secr
 end
 

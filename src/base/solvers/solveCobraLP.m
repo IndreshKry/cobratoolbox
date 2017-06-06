@@ -273,7 +273,7 @@ switch solver
             error('OPTI is not compatible with UNIX systems (macOS or Linux).')
         end
 
-        if ~verLessThan('matlab', '8.4')
+        if verLessThan('matlab', '8.4')
             error('OPTI is not compatible with a version of MATLAB later than 2014b.');
         end
         % J. Currie and D. I. Wilson, "OPTI: Lowering the Barrier Between Open
@@ -391,9 +391,9 @@ switch solver
         % write out an .MPS file
         MPSfilename = MPSfilename(1:min(8, length(MPSfilename)));
         if ~exist([tmpPath filesep 'MPS' filesep MPSfilename '.mps'], 'file')
-            cd('MPS');
-            convertCobraLP2mps(LPproblem, MPSfilename);
-            cd('..');
+            cd([tmpPath filesep 'MPS']);
+            writeLPProblem(LPproblem,'fileName',MPSfilename);
+            cd(tmpPath);
         end
 
         % run the DQQ procedure
@@ -1317,11 +1317,11 @@ switch solver
         end
         % 1 = (Simplex or Barrier) Optimal solution is available.
         stat=origStat;
-        if exist([pwd filesep 'clone1.log'],'file')
-            delete('clone1.log')
+        if exist([pwd filesep 'clone1_' labindex '.log'],'file')
+            delete([pwd filesep 'clone1_' labindex '.log'])
         end
-        if exist([pwd filesep 'clone2.log'],'file')
-            delete('clone2.log')
+        if exist([pwd filesep 'clone2_' labindex '.log'],'file')
+            delete([pwd filesep 'clone2_' labindex '.log'])
         end
     case 'lindo'
         %%
@@ -1361,23 +1361,23 @@ switch solver
         % especially xsize and zsize (see pdco.m) to get the real optimal
         % objective value
 
-        if ~isempty(pdco_xsize)
+        if exist('pdco_xsize', 'var') == 1
             xsize = pdco_xsize;
         else
             xsize = 100;
         end
-        if ~isempty(pdco_zsize)
+        if exist('pdco_zsize', 'var') == 1
             zsize = pdco_zsize;
         else
             zsize = 100;
         end
 
-        if ~isempty(pdco_method)
+        if exist('pdco_method', 'var') == 1
             options.Method = pdco_method;
         else
             options.Method = 1; %Cholesky
         end
-        if ~isempty(pdco_maxiter)
+        if exist('pdco_maxiter', 'var') == 1
             options.MaxIter = pdco_maxiter;
         else
             options.MaxIter = 200;
@@ -1402,7 +1402,7 @@ switch solver
     case 'mps'
         fprintf(' > The interface to ''mps'' from solveCobraLP will not be supported anymore.\n -> Use >> writeCbModel(model, ''mps'');\n');
         % temporary legacy support
-        writeCbModel(LPproblem, 'mps', 'LP.mps', [], [], [], [], solverParams);
+        writeLPProblem(LPproblem,'fileName','LP.mps','solverParams',solverParams);
     otherwise
         error(['Unknown solver: ' solver]);
 

@@ -152,12 +152,11 @@ html_theme = "sphinx_cobra_theme"
 
 import sphinx_cobra_theme
 import sphinx_rtd_theme
-import sphinx_julia_theme
 
 html_theme_path = [sphinx_rtd_theme.get_html_theme_path(),
                    sphinx_cobra_theme.get_theme_dir()]
 print html_theme_path
-html_sidebars = sphinx_julia_theme.default_sidebars()
+html_sidebars = sphinx_cobra_theme.default_sidebars()
 
 # shutil.copy()
 
@@ -189,7 +188,7 @@ html_title = u'The COBRA Toolbox'
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
 #
-html_logo = '_static/logo.png'
+html_logo = '_static/images/logos/logo.png'
 
 # The name of an image file (relative to this directory) to use as a favicon of
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
